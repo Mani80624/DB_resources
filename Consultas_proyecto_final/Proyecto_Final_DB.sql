@@ -100,6 +100,28 @@ SELECT `Abnormality type`, `calc type`, `calc distribution`, `assessment`, `path
 UNION SELECT `Abnormality type`, `calc type`, `calc distribution`, `assessment`, `pathology`, `subtlety`, `patient_id` FROM calc_train;
 
 SELECT * FROM Calcificacion;
+################################### Depuración de los datos #####################################
+# En la columna de Id_pacientes no existen valores nulos
+SELECT * FROM pacientes WHERE Id_pacientes IS NULL;
+
+# Valores nulos en mama
+SELECT * FROM Mama WHERE Breast_density IS NULL OR Side_breast IS NULL OR Id_pacientes IS NULL;
+
+# Valores nulos en mama imagen
+SELECT * FROM Imagen WHERE Image_view IS NULL OR Image_file_path IS NULL 
+OR Cropped_image_file_path IS NULL OR ROI_mask_file_path IS NULL OR Id_pacientes IS NULL;
+
+# Valores nulos en la tabla de calcificación
+SELECT * FROM Calcificacion WHERE Abnormality_type IS NULL OR Calc_type IS NULL 
+OR  Calc_distribution IS NULL OR BIRADS IS NULL 
+OR Pathology IS NULL OR Subtlety IS NULL OR Id_pacientes IS NULL;
+
+# Valores nulos en la tabla de masa
+SELECT * FROM Masa WHERE Abnormality_type IS NULL OR Mass_shape IS NULL 
+OR  Mass_Margins IS NULL OR BIRADS IS NULL 
+OR Pathology IS NULL OR Subtlety IS NULL OR Id_pacientes IS NULL;
+
+
 
 #################################### Consultas ##############################################
 
@@ -125,14 +147,55 @@ INNER JOIN Masa m ON p.Id_pacientes = m.Id_pacientes
 WHERE BIRADS = 3
 GROUP BY Pathology;
 
-# Obtener direcciones de las imagenes de BIRADS 3 para calcificaciones
+# Obtener direcciones de las imagenes de BIRADS 3 maligno para calcificaciones
 SELECT i.Image_file_path FROM Imagen i
 INNER JOIN Pacientes p ON i.Id_pacientes = p.Id_pacientes
 INNER JOIN calcificacion c ON i.Id_pacientes = c.Id_pacientes
-WHERE BIRADS = 3;
+WHERE BIRADS = 3 AND Pathology='MALIGNANT';
 
-# Obtener direcciones de las imagenes de BIRADS 3 para masas
+# Obtener direcciones de las imagenes de BIRADS 3 beningo para calcificaciones
+SELECT i.Image_file_path FROM Imagen i
+INNER JOIN Pacientes p ON i.Id_pacientes = p.Id_pacientes
+INNER JOIN calcificacion c ON i.Id_pacientes = c.Id_pacientes
+WHERE BIRADS = 3 AND Pathology='BENIGN';
+
+# Obtener direcciones de las imagenes de BIRADS 3 Maligno para masas
 SELECT i.Image_file_path FROM Imagen i
 INNER JOIN Pacientes p ON i.Id_pacientes = p.Id_pacientes
 INNER JOIN masa m ON i.Id_pacientes = m.Id_pacientes
-WHERE BIRADS = 3;
+WHERE BIRADS = 3 AND Pathology='MALIGNANT';
+
+# Obtener direcciones de las imagenes de BIRADS 3 Benigno para masas
+SELECT i.Image_file_path FROM Imagen i
+INNER JOIN Pacientes p ON i.Id_pacientes = p.Id_pacientes
+INNER JOIN masa m ON i.Id_pacientes = m.Id_pacientes
+WHERE BIRADS = 3 AND Pathology='BENIGN';
+
+# Obtener direcciones de las imagenes de BIRADS 4 para calcificaciones
+SELECT i.Image_file_path FROM Imagen i
+INNER JOIN Pacientes p ON i.Id_pacientes = p.Id_pacientes
+INNER JOIN calcificacion c ON i.Id_pacientes = c.Id_pacientes
+WHERE BIRADS = 4;
+
+# Obtener direcciones de las imagenes de BIRADS 4 para masas
+SELECT i.Image_file_path FROM Imagen i
+INNER JOIN Pacientes p ON i.Id_pacientes = p.Id_pacientes
+INNER JOIN masa m ON i.Id_pacientes = m.Id_pacientes
+WHERE BIRADS = 4;
+
+# Insersión de datos a la tabla de masa
+INSERT INTO Masa(Abnormality_type, Mass_shape, Mass_Margins, BIRADS, Pathology, Subtlety, Id_pacientes)
+VALUES ('mass', 'ROUND', 'ILLDEFINED', '4', 'BENIGN', 2, 'P_00016');
+# Verificación de la insersión
+SELECT * FROM masa WHERE Id_pacientes = 'P_00016';
+
+# Actualización de un registro de la tabla calcificación
+UPDATE calcificacion
+SET Pathology = 'MALIGNANT'
+WHERE Id_calcificacion = 2 ;
+
+# Verificar los cambios
+SELECT * FROM calcificacion WHERE Id_pacientes = 'P_00038';
+
+SELECT * FROM calcificacion;
+
